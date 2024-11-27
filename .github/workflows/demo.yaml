@@ -1,4 +1,4 @@
-name: Build and Upload Simple Artifact
+name: Build, Test, and Upload Artifact
 
 on:
   push:
@@ -9,36 +9,39 @@ on:
       - main
 
 jobs:
-  build-and-upload:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code
+      # Step 1: Checkout the code from the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: List files in the repository to show the current state
-      - name: List files in the repository
-        run: |
-          echo "Listing files in the repository:"
-          ls -R  # Lists all files and directories recursively
+      # Step 2: Install dependencies (e.g., Node.js)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'  # Specify the Node.js version you need
 
-      # Step 3: Build the application (simulated by creating a file)
+      - name: Install dependencies
+        run: npm install
+
+      # Step 3: Build the application (simulating a build step)
       - name: Build the application
         run: |
           echo "Building the application"
-          mkdir -p dist  # Create a directory to store the build
-          echo "Build version 1.0" > dist/version.txt  # Create a simple file to simulate build output
+          mkdir -p dist  # Create the directory to store the build
+          echo "Build version 1.0" > dist/version.txt  # Simulate build output
 
-      # Step 4: List files again after build to show the created artifact
+      # Step 4: List the files in the repository to show build output
       - name: List files after build
         run: |
-          echo "Listing files after the build:"
-          ls -R  # Lists all files and directories recursively again
+          echo "Listing files after build:"
+          ls -R  # List all files and directories recursively
 
       # Step 5: Upload the created file as an artifact
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
           name: build-artifact
-          path: dist/version.txt  # Path to the created file
+          path: dist/version.txt  # Path to the file you want to upload
