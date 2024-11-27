@@ -1,4 +1,4 @@
-name: Build, Test, and Upload Artifacts
+name: Build and Upload Simple Artifact
 
 on:
   push:
@@ -9,28 +9,24 @@ on:
       - main
 
 jobs:
-  # Job 1: Build the application
-  build:
+  build-and-upload:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the code
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'  # Specify Node.js version here
-
-      - name: Install dependencies
-        run: npm install
-
+      # Step 2: Build the application (for example, npm install and npm run build)
       - name: Build the application
-        run: npm run build
+        run: |
+          echo "Building the application"
+          mkdir -p dist  # Create a directory to store the build
+          echo "Build version 1.0" > dist/version.txt  # Create a simple file to simulate build output
 
-      # Save build output as an artifact for use in other jobs
-      - name: Upload build artifacts
+      # Step 3: Upload the created file as an artifact
+      - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: build-artifacts
- 
+          name: build-artifact
+          path: dist/version.txt  # Path to the created file
