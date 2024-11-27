@@ -7,7 +7,7 @@ on:
       environment:
         description: "Deployment environment (e.g., staging, production)"
         required: true
-        default: "production"
+        default: "dev"
       version:
         description: "Version of the application to deploy"
         required: false
