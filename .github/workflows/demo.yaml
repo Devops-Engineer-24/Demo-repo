@@ -1,70 +1,48 @@
-# File: .github/workflows/deploy-app.yml
-name: Deploy Application
+name: Build, Test, and Upload Artifacts
 
 on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: "Deployment environment (e.g., staging, production)"
-        required: true
-        default: "dev"
-      version:
-        description: "Version of the application to deploy"
-        required: false
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  deploy:
-    name: Deploy Application to ${{ github.event.inputs.environment }}
+  build-test-upload:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out the code
-      - name: Checkout code
+      # Step 1: Checkout the code from the repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up environment variables
-      - name: Set environment variables
-        run: |
-          echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
-          echo "VERSION=${{ github.event.inputs.version || 'latest' }}" >> $GITHUB_ENV
-          echo "Application deployment to $ENVIRONMENT using version $VERSION."
+      # Step 2: Set up Node.js (can be replaced with other setups like Python, Java, etc.)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'  # Specify Node.js version here
 
-      # Step 3: Install dependencies (example: Node.js project)
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
-        working-directory: ./app
 
-      # Step 4: Build the application (for production)
-      - name: Build application
-        if: env.ENVIRONMENT == 'production'
+      # Step 4: Build the application (if applicable, like for front-end apps)
+      - name: Build the application
         run: npm run build
-        working-directory: ./app
 
-      # Step 5: Deploy application
-      - name: Deploy to ${{ github.event.inputs.environment }}
-        run: |
-          if [[ "$ENVIRONMENT" == "production" ]]; then
-            echo "Deploying to production environment..."
-            # Add real production deployment commands here (e.g., AWS CLI, kubectl)
-            echo "kubectl apply -f k8s/prod-deployment.yaml"
-          elif [[ "$ENVIRONMENT" == "staging" ]]; then
-            echo "Deploying to staging environment..."
-            # Add staging-specific deployment commands
-            echo "kubectl apply -f k8s/staging-deployment.yaml"
-          else
-            echo "Unknown environment: $ENVIRONMENT"
-            exit 1
-          fi
+      # Step 5: Run tests
+      - name: Run tests
+        run: npm test
 
-      # Step 6: Verify deployment
-      - name: Verify deployment
-        run: |
-          echo "Verifying deployment in $ENVIRONMENT..."
-          # Add commands to check deployment status
-          echo "kubectl get pods -n $ENVIRONMENT"
+      # Step 6: Upload build artifacts (e.g., compiled files, test reports)
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: ./dist  # Adjust the path to your build output directory
 
-      # Step 7: Notify success
-      - name: Deployment success message
+      # Step 7: Optionally, notify success or failure (e.g., email, Slack, etc.)
+      - name: Notify success
         if: success()
-        run: |
-          echo "Deployment to $ENVIRONMENT completed successfully."
+        run: echo "Build, Test, and Artifact Upload Completed Successfully"
