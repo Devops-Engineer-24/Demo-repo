@@ -1,0 +1,70 @@
+# File: .github/workflows/deploy-app.yml
+name: Deploy Application
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment environment (e.g., staging, production)"
+        required: true
+        default: "production"
+      version:
+        description: "Version of the application to deploy"
+        required: false
+
+jobs:
+  deploy:
+    name: Deploy Application to ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up environment variables
+      - name: Set environment variables
+        run: |
+          echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+          echo "VERSION=${{ github.event.inputs.version || 'latest' }}" >> $GITHUB_ENV
+          echo "Application deployment to $ENVIRONMENT using version $VERSION."
+
+      # Step 3: Install dependencies (example: Node.js project)
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./app
+
+      # Step 4: Build the application (for production)
+      - name: Build application
+        if: env.ENVIRONMENT == 'production'
+        run: npm run build
+        working-directory: ./app
+
+      # Step 5: Deploy application
+      - name: Deploy to ${{ github.event.inputs.environment }}
+        run: |
+          if [[ "$ENVIRONMENT" == "production" ]]; then
+            echo "Deploying to production environment..."
+            # Add real production deployment commands here (e.g., AWS CLI, kubectl)
+            echo "kubectl apply -f k8s/prod-deployment.yaml"
+          elif [[ "$ENVIRONMENT" == "staging" ]]; then
+            echo "Deploying to staging environment..."
+            # Add staging-specific deployment commands
+            echo "kubectl apply -f k8s/staging-deployment.yaml"
+          else
+            echo "Unknown environment: $ENVIRONMENT"
+            exit 1
+          fi
+
+      # Step 6: Verify deployment
+      - name: Verify deployment
+        run: |
+          echo "Verifying deployment in $ENVIRONMENT..."
+          # Add commands to check deployment status
+          echo "kubectl get pods -n $ENVIRONMENT"
+
+      # Step 7: Notify success
+      - name: Deployment success message
+        if: success()
+        run: |
+          echo "Deployment to $ENVIRONMENT completed successfully."
